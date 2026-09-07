@@ -956,9 +956,9 @@ function Articles() {
                     #{String(i + 1).padStart(2, '0')}
                   </span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: C.ink, lineHeight: 1.4, marginBottom: 4 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: C.ink, lineHeight: 1.4, margin: '0 0 4px' }}>
                   {a.t}
-                </div>
+                </h3>
                 <div className="art-teaser" style={{ fontSize: 11.5, color: C.inkSoft, lineHeight: 1.6 }}>
                   {teaser}
                 </div>
@@ -1227,18 +1227,18 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
       `}</style>
 
-      <div style={{ width: '100%', maxWidth: 420 }}>
+      <main style={{ width: '100%', maxWidth: 420 }}>
         {/* 영수증 카드 */}
         <div style={{ boxShadow: '0 18px 40px rgba(22,24,27,0.16)' }}>
           <TornEdge />
           <div style={{ background: C.paper, padding: '22px 26px 8px' }}>
             <div style={{ textAlign: 'center', marginBottom: 4 }}>
-              <div style={{
+              <h1 style={{
                 fontFamily: "'Nanum Gothic Coding', monospace", fontWeight: 800, fontSize: 21,
-                letterSpacing: 4, color: C.ink,
+                letterSpacing: 4, color: C.ink, margin: 0,
               }}>
                 주 휴 계 산 기
-              </div>
+              </h1>
               <div style={{ fontFamily: "'Nanum Gothic Coding', monospace", fontSize: 10, letterSpacing: 2, color: C.inkFaint, marginTop: 6 }}>
                 WEEKLY REST PAY RECEIPT
               </div>
@@ -1283,7 +1283,7 @@ export default function App() {
           광고 영역 · AdSense 승인 후 스크립트 삽입
         </div>
 
-        <details style={{ background: C.paper, border: `1px solid ${C.line}`, borderRadius: 10, marginTop: 14, padding: '0 16px' }}>
+        <details id="privacy-policy" style={{ background: C.paper, border: `1px solid ${C.line}`, borderRadius: 10, marginTop: 14, padding: '0 16px' }}>
           <summary style={{ padding: '13px 0', fontSize: 12, fontWeight: 700, color: C.ink, cursor: 'pointer' }}>
             🛡 개인정보처리방침
           </summary>
@@ -1303,7 +1303,7 @@ export default function App() {
         <p style={{ fontSize: 10.5, color: C.inkFaint, textAlign: 'center', lineHeight: 1.7, margin: '16px 0 0' }}>
           이 계산기는 참고용이며 법률·노무 자문이 아니에요.
         </p>
-      </div>
+      </main>
     </div>
   );
 }
