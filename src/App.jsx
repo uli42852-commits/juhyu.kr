@@ -5,6 +5,8 @@ import Layout from './components/Layout.jsx';
 export const ROUTES = {
   home: { load: () => import('./pages/Home.jsx'), tool: true },
   tracker: { load: () => import('./pages/Tracker.jsx'), tool: true },
+  invest: { load: () => import('./pages/Invest.jsx'), tool: true },
+  money: { load: () => import('./pages/Money.jsx'), tool: true },
   calculator: { load: () => import('./pages/Calculator.jsx'), tool: true },
   paycheckCheck: { load: () => import('./pages/PaycheckCheck.jsx'), tool: true },
   paycheck: { load: () => import('./pages/Paycheck.jsx'), tool: true },

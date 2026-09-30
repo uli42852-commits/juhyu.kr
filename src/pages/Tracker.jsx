@@ -1,5 +1,6 @@
 import React from 'react';
 import TrackerApp from '../components/tracker/TrackerApp.jsx';
+import { HubTabs, BottomNav } from '../components/Hub.jsx';
 import { Faq, Related, Section, Prose } from '../components/Sections.jsx';
 import { HELP_LINE } from '../lib/legal.js';
 
@@ -42,6 +43,7 @@ export const faq = [
 export default function TrackerPage() {
   return (
     <div className="wrap">
+      <HubTabs current="tracker" />
       <TrackerApp />
 
       <Section title="알바비 추적은 이렇게 써요">
@@ -58,7 +60,8 @@ export default function TrackerPage() {
       </Section>
 
       <Faq items={faq} />
-      <Related keys={['paycheck', 'paycheckCheck', 'calculator', 'severance']} />
+      <Related keys={['money', 'invest', 'paycheck', 'severance']} />
+      <BottomNav current="tracker" />
     </div>
   );
 }

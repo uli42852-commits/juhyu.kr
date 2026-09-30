@@ -8,7 +8,7 @@ const dist = path.join(root, 'dist');
 const template = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(dist, '.vite', 'manifest.json'), 'utf8'));
 const PAGE_FILES = {
-  home: 'Home', tracker: 'Tracker', calculator: 'Calculator', paycheckCheck: 'PaycheckCheck', paycheck: 'Paycheck', monthly: 'Monthly',
+  home: 'Home', tracker: 'Tracker', invest: 'Invest', money: 'Money', calculator: 'Calculator', paycheckCheck: 'PaycheckCheck', paycheck: 'Paycheck', monthly: 'Monthly',
   weekly: 'WeeklyHolidayPay', night: 'NightWorkPay', hourly: 'HourlyWage', minimumWage: 'MinimumWage', albaPay: 'AlbaPay',
   severance: 'Severance', guide: 'Guide', privacy: 'Privacy', notFound: 'NotFound',
 };
@@ -46,7 +46,7 @@ for (const [key, page] of Object.entries(PAGES)) {
 }
 await write(path.join(dist, '404.html'), 'notFound');
 
-const PRIORITY = { home: '1.0', tracker: '0.9', calculator: '0.9', paycheckCheck: '0.9', weekly: '0.9', paycheck: '0.8', monthly: '0.8', minimumWage: '0.8', privacy: '0.2' };
+const PRIORITY = { home: '1.0', tracker: '0.9', invest: '0.8', money: '0.8', calculator: '0.9', paycheckCheck: '0.9', weekly: '0.9', paycheck: '0.8', monthly: '0.8', minimumWage: '0.8', privacy: '0.2' };
 const urls = Object.entries(PAGES).map(([key, p]) => `  <url>
     <loc>${SITE.origin}${p.path}</loc>
     <lastmod>${SITE.updated}</lastmod>

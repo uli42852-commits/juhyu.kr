@@ -8,20 +8,7 @@ export default function HomeTrackCard() {
   const { state, loaded, active } = useTracker();
   const hasData = loaded && active && state.logs.some((l) => l.workplaceId === active.id);
 
-  if (!hasData) {
-    return (
-      <section className="home-track" aria-label="알바비 추적">
-        <h2>🕵 월급 탐정 · 알바비 추적</h2>
-        <p>일한 날마다 출퇴근 시간만 기록하면, 월급날 받은 돈과 자동으로 비교해서 어디서 차이가 나는지 알려드려요.</p>
-        <div className="row">
-          <div><div className="k">받아야 할 돈</div><div className="v">기록 기준</div></div>
-          <div><div className="k">받은 돈</div><div className="v">입금액</div></div>
-          <div><div className="k">차이</div><div className="v hl">자동 확인</div></div>
-        </div>
-        <a className="btn btn-marker btn-block" href="/tracker/#/start">{loaded && active ? '오늘 근무 기록하기' : '내 알바비 추적 시작하기'}</a>
-      </section>
-    );
-  }
+  if (!hasData) return null;
 
   const cur = todayKey().slice(0, 7);
   const now = monthSummary(state, active, cur);
