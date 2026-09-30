@@ -64,12 +64,19 @@ export function useMoney() {
       trades: s.trades.filter((t) => t.holdingId !== id),
       dividends: s.dividends.filter((d) => d.holdingId !== id),
     })),
-    addTrade: (fields) => commit((s) => ({ ...s, trades: [...s.trades, { id: uid(), type: 'buy', memo: '', krw: '', createdAt: now(), ...fields }] })),
+    addTrade: (fields) => {
+      const t = { id: uid(), type: 'buy', memo: '', krw: '', createdAt: now(), ...fields };
+      commit((s) => ({ ...s, trades: [...s.trades, t] }));
+      return t;
+    },
     removeTrade: (id) => commit((s) => ({ ...s, trades: s.trades.filter((t) => t.id !== id) })),
     addDividend: (fields) => commit((s) => ({ ...s, dividends: [...s.dividends, { id: uid(), currency: 'KRW', memo: '', createdAt: now(), ...fields }] })),
     removeDividend: (id) => commit((s) => ({ ...s, dividends: s.dividends.filter((d) => d.id !== id) })),
     addSaving: (fields) => commit((s) => ({ ...s, savings: [...s.savings, { id: uid(), type: 'save', memo: '', createdAt: now(), ...fields }] })),
     removeSaving: (id) => commit((s) => ({ ...s, savings: s.savings.filter((x) => x.id !== id) })),
+    setRoulette: (patch) => commit((s) => ({ ...s, roulette: { ...s.roulette, ...patch } })),
+    addRouletteEntry: (entry) => commit((s) => ({ ...s, roulette: { ...s.roulette, history: [...s.roulette.history, entry].slice(-500) } })),
+    linkRoulette: (entryId, tradeId) => commit((s) => ({ ...s, roulette: { ...s.roulette, history: s.roulette.history.map((e) => (e.id === entryId ? { ...e, purchaseId: tradeId } : e)) } })),
     setSettings: (patch) => commit((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
     replaceAll: (data) => commit(() => normalizeMoney(data)),
   };

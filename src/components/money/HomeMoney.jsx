@@ -5,6 +5,7 @@ import { assetNow, monthFlow, dividendStats, portfolio } from '../../lib/money.j
 import { fmt } from '../../lib/pay.js';
 import { todayKey } from '../../lib/tracker.js';
 import { MoneyFlow, FunLines } from './Flow.jsx';
+import RouletteTeaser from '../invest/RouletteTeaser.jsx';
 
 const won = (v) => `${fmt(v)}원`;
 
@@ -49,6 +50,9 @@ export default function HomeMoney() {
           </a>
         ))}
       </div>
+      {loaded && m.state.holdings.length >= 2 && (
+        <div style={{ marginTop: 12 }}><RouletteTeaser href="/invest/#/roulette" count={m.state.holdings.length} /></div>
+      )}
       {(hasMoney || hasWork) && (
         <section className="section" style={{ marginTop: 20 }}>
           <h2>이번 달 돈의 흐름</h2>

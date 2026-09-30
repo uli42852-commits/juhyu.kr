@@ -11,12 +11,12 @@ export function useHashRoute() {
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
-  const [, view = '', arg = ''] = hash.replace(/^#/, '').split('/');
+  const [, view = '', arg = '', arg2 = ''] = hash.replace(/^#/, '').split('/');
   const go = (path) => {
     window.location.hash = path;
     window.scrollTo(0, 0);
   };
-  return { view, arg: decodeURIComponent(arg), go };
+  return { view, arg: decodeURIComponent(arg), arg2: decodeURIComponent(arg2), go };
 }
 
 export function Toast({ msg }) {
