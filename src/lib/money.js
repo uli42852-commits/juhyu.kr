@@ -4,7 +4,8 @@ import { num, analyzeShift } from './pay.js';
 import { monthSummary, ymShift, todayKey, uid } from './tracker.js';
 
 export const MONEY_KEY = 'juhyu-money-v1';
-export const EMPTY_MONEY = { version: 1, holdings: [], trades: [], dividends: [], savings: [], snapshots: [], settings: { usdKrw: '' } };
+export const EMPTY_ROULETTE = { excluded: [], plannedAmount: '', monthlyPlan: '', history: [] };
+export const EMPTY_MONEY = { version: 1, holdings: [], trades: [], dividends: [], savings: [], snapshots: [], settings: { usdKrw: '' }, roulette: EMPTY_ROULETTE };
 
 export { uid };
 
@@ -20,6 +21,17 @@ export function normalizeMoney(raw) {
     savings: arr(raw.savings).filter(dated),
     snapshots: arr(raw.snapshots).filter((s) => s && /^\d{4}-\d{2}$/.test(s.month)),
     settings: { usdKrw: '', ...(raw.settings || {}) },
+    roulette: normalizeRoulette(raw.roulette),
+  };
+}
+
+function normalizeRoulette(r) {
+  const x = r && typeof r === 'object' ? r : {};
+  return {
+    excluded: Array.isArray(x.excluded) ? x.excluded : [],
+    plannedAmount: x.plannedAmount || '',
+    monthlyPlan: x.monthlyPlan || '',
+    history: (Array.isArray(x.history) ? x.history : []).filter((e) => e && e.id && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && e.resultId),
   };
 }
 
@@ -239,4 +251,80 @@ export function hoursOfWork(amount, wage) {
 export function pct(x) {
   const v = Math.round(x * 10000) / 100;
   return `${v > 0 ? '+' : ''}${v.toFixed(2)}%`;
+}
+
+/* ── 🎰 오늘 뭐 살까? (포트폴리오 룰렛) ───────────────────
+   후보는 사용자가 등록한 종목 중 직접 고른 것만. 모든 후보는 같은 확률.
+   룰렛 결과(history)와 실제 매수(trades)는 따로 저장하고, 매수 기록을 남길 때만 purchaseId로 잇는다. */
+export function rouletteCandidates(money) {
+  const ex = new Set((money.roulette && money.roulette.excluded) || []);
+  return money.holdings.map((h) => ({ holding: h, checked: !ex.has(h.id) }));
+}
+
+/* 0 ≤ i < n 균등 난수. 브라우저에서는 crypto를 쓰고, 테스트에서는 rand를 넣는다 */
+export function pickIndex(n, rand) {
+  if (n <= 0) return -1;
+  if (rand) return Math.min(n - 1, Math.floor(rand() * n));
+  const c = typeof globalThis !== 'undefined' && globalThis.crypto;
+  if (c && c.getRandomValues) {
+    // 모듈로 편향 없이 균등하게
+    const limit = Math.floor(0x100000000 / n) * n;
+    const buf = new Uint32Array(1);
+    do { c.getRandomValues(buf); } while (buf[0] >= limit);
+    return buf[0] % n;
+  }
+  return Math.floor(Math.random() * n);
+}
+
+export function makeRouletteEntry(candidates, index, { plannedAmount = '', now = new Date() } = {}) {
+  const r = candidates[index];
+  return {
+    id: uid(),
+    date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+    at: now.toISOString(),
+    candidates: candidates.map((h) => ({ id: h.id, label: h.ticker || h.name })),
+    resultId: r.id,
+    resultLabel: r.ticker || r.name,
+    plannedAmount: plannedAmount ? String(num(plannedAmount)) : '',
+    purchaseId: null,
+  };
+}
+
+/* 기록 한 건의 실제 매수 여부: 룰렛에서 이어 기록한 매수(purchaseId)가 있거나, 같은 날 결과 종목을 산 기록이 있으면 ✅ */
+export function rouletteHistory(money) {
+  const buys = money.trades.filter((t) => t.type !== 'sell' && !t.initial);
+  return [...((money.roulette && money.roulette.history) || [])]
+    .sort((a, b) => String(b.at).localeCompare(String(a.at)))
+    .map((e) => {
+      const linked = e.purchaseId ? buys.find((t) => t.id === e.purchaseId) : null;
+      const sameDay = buys.filter((t) => t.date === e.date);
+      const matched = linked || sameDay.find((t) => t.holdingId === e.resultId) || null;
+      const h = money.holdings.find((x) => x.id === e.resultId);
+      return {
+        ...e,
+        label: h ? (h.ticker || h.name) : e.resultLabel,
+        purchase: matched,
+        purchaseKrw: matched ? tradeKrw(matched, h, money) : 0,
+        boughtOther: !matched && sameDay.length > 0,
+      };
+    });
+}
+
+/* 재미용 통계 — 투자 성과가 아니다 */
+export function rouletteStats(money) {
+  const list = rouletteHistory(money);
+  const counts = {};
+  list.forEach((e) => { counts[e.label] = (counts[e.label] || 0) + 1; });
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0] || null;
+  const days = [...new Set(list.map((e) => e.date))];
+  const buyDays = new Set(money.trades.filter((t) => t.type !== 'sell' && !t.initial).map((t) => t.date));
+  const matchedDays = new Set(list.filter((e) => e.purchase).map((e) => e.date));
+  return {
+    spins: list.length,
+    top: top ? { label: top[0], count: top[1] } : null,
+    days: days.length,
+    boughtDays: days.filter((d) => buyDays.has(d)).length,
+    matchedDays: matchedDays.size,
+    list,
+  };
 }

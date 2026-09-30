@@ -110,3 +110,43 @@ test('보유 종목 등록(initial)은 이번 달 투자금에 넣지 않는다'
   assert.equal(investedIn(m, '2026-09').total, 300000);
   assert.equal(holdingStats(m, m.holdings[0]).shares, 13);
 });
+
+import { rouletteCandidates, pickIndex, makeRouletteEntry, rouletteHistory, rouletteStats } from '../src/lib/money.js';
+
+test('룰렛 후보: 내 종목만, 제외한 것 빼고, 새 종목은 자동으로 후보', () => {
+  const m = base();
+  m.roulette.excluded = ['h2'];
+  const c = rouletteCandidates(m);
+  assert.deepEqual(c.map((x) => [x.holding.id, x.checked]), [['h1', true], ['h2', false]]);
+  m.holdings.push({ id: 'h3', ticker: 'NEW', currency: 'KRW' });
+  assert.equal(rouletteCandidates(m).find((x) => x.holding.id === 'h3').checked, true);
+});
+
+test('룰렛은 모든 후보가 같은 확률', () => {
+  const n = 5; const counts = Array(n).fill(0);
+  for (let i = 0; i < 50000; i += 1) counts[pickIndex(n)] += 1;
+  counts.forEach((c) => assert.ok(Math.abs(c / 50000 - 0.2) < 0.01, `편향: ${counts}`));
+  assert.equal(pickIndex(4, () => 0.999), 3);
+  assert.equal(pickIndex(0), -1);
+});
+
+test('룰렛 결과와 실제 매수는 따로: 매수 기록을 남길 때만 ✅', () => {
+  const m = base();
+  const e = makeRouletteEntry([m.holdings[0], m.holdings[1]], 1, { plannedAmount: '30,000', now: new Date(2026, 8, 30, 10) });
+  assert.equal(e.resultLabel, 'AAA');
+  assert.equal(e.plannedAmount, '30000');
+  m.roulette.history = [e];
+  let h = rouletteHistory(m);
+  assert.equal(h[0].purchase, null);
+  assert.equal(m.trades.length, 3); // 룰렛만으로는 매수 기록이 생기지 않는다
+  m.trades.push({ id: 'tr', holdingId: 'h2', type: 'buy', date: '2026-09-30', shares: '1', price: '20', krw: '30000' });
+  m.roulette.history = [{ ...e, purchaseId: 'tr' }];
+  h = rouletteHistory(m);
+  assert.equal(h[0].purchase.id, 'tr');
+  assert.equal(h[0].purchaseKrw, 30000);
+  const s = rouletteStats(m);
+  assert.equal(s.spins, 1);
+  assert.equal(s.top.label, 'AAA');
+  assert.equal(s.boughtDays, 1);
+  assert.equal(s.matchedDays, 1);
+});

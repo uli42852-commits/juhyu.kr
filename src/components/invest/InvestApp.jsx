@@ -7,6 +7,7 @@ import {
   portfolio, holdingStats, dividendStats, hoursOfWork, mainWage, pct, toKrw, usdRate, investedIn,
 } from '../../lib/money.js';
 import { fmt, num } from '../../lib/pay.js';
+import Roulette, { RouletteTeaser } from './Roulette.jsx';
 import { todayKey } from '../../lib/tracker.js';
 
 const INVEST_NOTE = 'JUHYU는 내가 입력한 투자 기록을 정리하는 도구예요. 종목 추천이나 투자 권유를 하지 않아요. 가격·배당은 직접 입력한 값이라 실제와 다를 수 있어요.';
@@ -55,6 +56,9 @@ function Dashboard({ m, tracker, go }) {
   return (
     <div className="tk-grid two">
       <div className="tk-grid">
+        {m.state.holdings.length >= 2
+          ? <RouletteTeaser onClick={() => go('/roulette')} count={m.state.holdings.length} />
+          : <div className="fun-line">🎰 종목을 2개 이상 등록하면 &lsquo;오늘 뭐 살까?&rsquo; 룰렛을 돌릴 수 있어요.</div>}
         <Card title="📈 내 투자">
           <div className="stat-grid">
             <div className="stat"><div className="k">총 투자금</div><div className="v">{won(p.invested)}</div></div>
@@ -146,9 +150,10 @@ function AddHolding({ m, go, toast }) {
 }
 
 /* ── 투자 기록 (매수/매도) — 종목 + 금액만 필수 ─────── */
-function TradeForm({ m, go, toast, holdingId }) {
+function TradeForm({ m, go, toast, holdingId, rouletteId }) {
   const holdings = m.state.holdings;
-  const [f, setF] = useState({ holdingId: holdingId || (holdings[0] && holdings[0].id) || '', type: 'buy', date: todayKey(), amount: '', shares: '', price: '', memo: '' });
+  const entry = rouletteId ? m.state.roulette.history.find((e) => e.id === rouletteId) : null;
+  const [f, setF] = useState({ holdingId: holdingId || (holdings[0] && holdings[0].id) || '', type: 'buy', date: todayKey(), amount: entry && entry.plannedAmount ? entry.plannedAmount : '', shares: '', price: '', memo: entry ? '🎰 룰렛' : '' });
   const set = (p) => setF((x) => ({ ...x, ...p }));
   const h = holdings.find((x) => x.id === f.holdingId);
   if (!holdings.length) {
@@ -161,15 +166,22 @@ function TradeForm({ m, go, toast, holdingId }) {
   const estShares = !num(f.shares) && num(f.amount) && priceKrw ? num(f.amount) / priceKrw : 0;
   const save = () => {
     const shares = num(f.shares) || estShares;
-    m.addTrade({ holdingId: f.holdingId, type: f.type, date: f.date, shares: String(Math.round(shares * 10000) / 10000), price: String(price), krw: String(num(f.amount) || ''), memo: f.memo.trim() });
-    toast(`${h.ticker || h.name} ${f.type === 'sell' ? '매도' : '투자'} ${fmt(num(f.amount) || shares * priceKrw)}원 기록`);
-    go('/');
+    const t = m.addTrade({ holdingId: f.holdingId, type: f.type, date: f.date, shares: String(Math.round(shares * 10000) / 10000), price: String(price), krw: String(num(f.amount) || ''), memo: f.memo.trim() });
+    // 룰렛에서 넘어온 경우에만, 사용자가 저장을 눌렀을 때 룰렛 기록과 잇는다
+    if (entry && f.type === 'buy') m.linkRoulette(entry.id, t.id);
+    toast(`${h.ticker || h.name} ${f.type === 'sell' ? '매도' : '매수'} ${fmt(num(f.amount) || shares * priceKrw)}원 기록`);
+    go(entry ? '/roulette' : '/');
   };
+  // 매수 후 평균매수가 미리보기
+  const cur = h ? holdingStats(m.state, h) : null;
+  const addShares = num(f.shares) || estShares;
+  const newAvg = cur && f.type === 'buy' && addShares > 0 ? (cur.avgPrice * cur.shares + (price || 0) * addShares) / (cur.shares + addShares) : 0;
   const canSave = h && (num(f.amount) > 0 || num(f.shares) > 0) && (num(f.shares) > 0 || estShares > 0);
   return (
     <>
-      <BackLink go={go} label="내 투자" />
-      <Card title="오늘 투자했나요?">
+      <BackLink go={go} to={entry ? '/roulette' : '/'} label={entry ? '룰렛' : '내 투자'} />
+      <Card title={entry && h ? `${h.ticker || h.name} 매수` : '오늘 투자했나요?'} aside={entry ? '🎰 룰렛 결과' : ''}>
+        {entry && <p className="field-hint" style={{ marginTop: -8, marginBottom: 12 }}>실제로 샀다면 저장해주세요. 저장해야 포트폴리오와 룰렛 기록에 &lsquo;실제 매수 ✅&rsquo;로 반영돼요.</p>}
         <Field label="종목" htmlFor="t-h">
           <select id="t-h" className="input" value={f.holdingId} onChange={(e) => (e.target.value === '__new' ? go('/add') : set({ holdingId: e.target.value }))}>
             {holdings.map((x) => <option key={x.id} value={x.id}>{x.name}{x.ticker && x.ticker !== x.name ? ` (${x.ticker})` : ''}</option>)}
@@ -190,8 +202,9 @@ function TradeForm({ m, go, toast, holdingId }) {
           </div>
         </details>
         {estShares > 0 && <p className="field-hint">수량을 안 적어서 현재가 기준 약 {fmtShares(estShares)}주로 기록돼요.</p>}
+        {newAvg > 0 && <p className="field-hint">매수 후 보유 {fmtShares(cur.shares + addShares)}주 · 평균매수가 약 {curPrice(newAvg, h.currency)} (자동 계산)</p>}
         {h && !num(f.shares) && !priceKrw && num(f.amount) > 0 && <Notice level="warn">종목 현재가가 없어서 수량을 추정할 수 없어요. 수량을 입력해주세요.</Notice>}
-        <button type="button" className="btn btn-primary btn-block" style={{ marginTop: 12 }} disabled={!canSave} onClick={save}>저장</button>
+        <button type="button" className="btn btn-primary btn-block" style={{ marginTop: 12 }} disabled={!canSave} onClick={save}>{entry ? '매수 기록 저장' : '저장'}</button>
       </Card>
     </>
   );
@@ -411,12 +424,13 @@ function SettingsView({ m, go, toast }) {
 export default function InvestApp() {
   const m = useMoney();
   const tracker = useTracker();
-  const { view, arg, go } = useHashRoute();
+  const { view, arg, arg2, go } = useHashRoute();
   const [msg, toast] = useToast();
   let body;
   if (!m.loaded) body = <Card><p className="field-hint" style={{ marginTop: 0 }}>불러오는 중…</p></Card>;
   else if (view === 'add') body = <AddHolding m={m} go={go} toast={toast} />;
-  else if (view === 'buy') body = <TradeForm key={arg} m={m} go={go} toast={toast} holdingId={arg} />;
+  else if (view === 'buy') body = <TradeForm key={`${arg}-${arg2}`} m={m} go={go} toast={toast} holdingId={arg} rouletteId={arg2} />;
+  else if (view === 'roulette') body = <Roulette m={m} tracker={tracker} go={go} toast={toast} />;
   else if (view === 'div') body = <DividendView m={m} tracker={tracker} go={go} toast={toast} />;
   else if (view === 'stock') body = <StockView key={arg} m={m} tracker={tracker} id={arg} go={go} toast={toast} />;
   else if (view === 'prices') body = <PricesView m={m} go={go} toast={toast} />;
