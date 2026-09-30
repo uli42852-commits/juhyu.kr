@@ -36,6 +36,9 @@ export default function PaycheckCheckPage() {
         lead="실제로 받은 금액과 근무 정보를 넣으면 받아야 할 금액과 비교하고, 차이가 있으면 무엇을 확인해야 하는지 알려드려요."
       />
       <PayCalculator variant="verify" />
+      <div className="notice info" style={{ marginTop: 12 }}>
+        매달 확인하고 싶다면 <a href="/tracker/#/start"><b>알바비 추적</b></a>에서 일한 날마다 기록해두세요. 월급날 입금액만 넣으면 어느 날짜·항목에서 차이가 나는지 자동으로 찾아드려요.
+      </div>
 
       <Section title="이렇게 비교해요">
         <Prose>
@@ -82,7 +85,7 @@ export default function PaycheckCheckPage() {
       </Section>
 
       <Faq items={faq} />
-      <Related keys={['paycheck', 'albaPay', 'calculator', 'weekly']} />
+      <Related keys={['tracker', 'paycheck', 'albaPay', 'calculator']} />
     </div>
   );
 }

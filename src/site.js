@@ -15,6 +15,14 @@ export const PAGES = {
     title: '알바비 계산기 · 주휴수당 계산 — 알바비, 제대로 받고 있나요? | 주휴계산기 JUHYU',
     description: '시급과 근무시간만 넣으면 기본급·주휴수당·야간수당·실수령액까지 한 번에 계산하고, 실제로 받은 알바비와 비교해 무엇을 확인해야 하는지 알려드려요. 2026년 최저임금 10,320원 기준, 로그인 없이 무료.',
   },
+  tracker: {
+    path: '/tracker/',
+    nav: '알바비 추적',
+    icon: '🕵',
+    short: '근무 기록하고 받은 돈과 자동 비교',
+    title: '알바비 추적 — 알바 근무시간 기록하고 받은 급여와 비교 | JUHYU',
+    description: '일한 날마다 출퇴근 시간을 기록하면 받아야 할 알바비를 계산하고, 월급날 실제 입금액과 비교해 어느 기록에서 차이가 나는지 알려드려요. 월말 리포트·퇴사 전 정산까지, 로그인 없이 무료.',
+  },
   calculator: {
     path: '/calculator/',
     nav: '급여 계산기',
@@ -111,7 +119,7 @@ export const PAGES = {
   },
 };
 
-export const TOOL_NAV = ['calculator', 'paycheckCheck', 'paycheck', 'monthly', 'weekly', 'night', 'hourly', 'minimumWage', 'albaPay', 'severance', 'guide'];
+export const TOOL_NAV = ['tracker', 'calculator', 'paycheckCheck', 'paycheck', 'monthly', 'weekly', 'night', 'hourly', 'minimumWage', 'albaPay', 'severance', 'guide'];
 
 export function pageByPath(pathname) {
   const p = pathname.endsWith('/') ? pathname : `${pathname}/`;

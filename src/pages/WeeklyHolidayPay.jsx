@@ -66,7 +66,7 @@ export default function WeeklyHolidayPayPage() {
       </Section>
 
       <Faq items={faq} />
-      <Related keys={['calculator', 'paycheckCheck', 'monthly', 'guide']} />
+      <Related keys={['tracker', 'calculator', 'paycheckCheck', 'monthly']} />
     </div>
   );
 }

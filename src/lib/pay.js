@@ -83,7 +83,6 @@ export function calculatePay(input) {
   const year = Number(input.year) || 2026;
   const month = Number(input.month) || 1;
   const workplace = input.workplace || 'unknown';
-  const premiumRate = 0.5;
 
   const days = []; // 이번 기간에 실제로 급여가 발생하는 근무일
   const weeks = []; // 주휴·주 단위 연장근로 판단용 주
@@ -117,7 +116,89 @@ export function calculatePay(input) {
     }
   }
 
-  const sumMin = (arr, k) => arr.reduce((s, x) => s + (x[k] || 0), 0);
+  const scheduledWeeklyHours = (() => {
+    let m = 0;
+    for (let w = 0; w < 7; w += 1) if (input.days[w]) m += analyzeShift(daySchedule(input, w)).paidMin;
+    return m / 60;
+  })();
+
+  return summarizePay({
+    wage, period, year, month, workplace, days, weeks, scheduledWeeklyHours,
+    extraHours: input.extraHours, deduction: input.deduction, fullAttendance: input.fullAttendance, mode: 'schedule',
+  });
+}
+
+const sumMin = (arr, k) => arr.reduce((s, x) => s + (x[k] || 0), 0);
+
+/* ── 근무 기록(알바비 추적) 기반 계산 ─────────────────── */
+function dateOf(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/* 하루 기록의 예상 금액 — 주휴수당은 주 단위라 여기서는 빠진다 */
+export function logAmounts(log, wage, workplace = 'unknown') {
+  const shift = analyzeShift(log);
+  const w = num(wage);
+  const base = round(w * shift.paidMin / 60);
+  const nightRaw = round(w * shift.nightMin / 60 * 0.5);
+  const overRaw = round(w * Math.max(0, shift.paidMin - 480) / 60 * 0.5);
+  const applies = workplace === 'over5';
+  return {
+    ...shift,
+    base,
+    night: applies ? nightRaw : 0,
+    overtime: applies ? overRaw : 0,
+    nightIfOver5: nightRaw,
+    overtimeIfOver5: overRaw,
+    total: base + (applies ? nightRaw + overRaw : 0),
+  };
+}
+
+/**
+ * 실제 근무 기록으로 한 달 예상 급여를 계산한다.
+ * logs: [{ date: 'YYYY-MM-DD', start, end, breakMin }]
+ * 주는 월~일, 일요일이 이 달에 있는 주의 주휴수당을 이 달에 넣는다(스케줄 계산기와 같은 규칙).
+ */
+export function calculateLogged({ wage, year, month, workplace = 'unknown', deduction = 'none', logs = [] }) {
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  const byDate = new Map();
+  logs.forEach((l) => { if (l && l.date) byDate.set(l.date, l); });
+  const toDay = (l) => {
+    const dt = dateOf(l.date);
+    return { w: mondayIndex(dt), date: l.date, label: `${dt.getMonth() + 1}/${dt.getDate()}`, ...analyzeShift(l) };
+  };
+  const days = [...byDate.values()].filter((l) => l.date.startsWith(prefix)).sort((a, b) => a.date.localeCompare(b.date)).map(toDay);
+  const weeks = [];
+  const last = new Date(year, month, 0).getDate();
+  for (let d = 1; d <= last; d += 1) {
+    const date = new Date(year, month - 1, d);
+    if (mondayIndex(date) !== 6) continue;
+    const first = new Date(year, month - 1, d - 6);
+    const wk = { label: `${first.getMonth() + 1}/${first.getDate()}~${month}/${d}`, start: toKey(first.getFullYear(), first.getMonth() + 1, first.getDate()), end: toKey(year, month, d), days: [] };
+    for (let k = 6; k >= 0; k -= 1) {
+      const dd = new Date(year, month - 1, d - k);
+      const l = byDate.get(toKey(dd.getFullYear(), dd.getMonth() + 1, dd.getDate()));
+      if (l) wk.days.push(toDay(l));
+    }
+    weeks.push(wk);
+  }
+  const weekCount = weeks.length || 1;
+  const scheduledWeeklyHours = weeks.reduce((s, wk) => s + sumMin(wk.days, 'paidMin'), 0) / 60 / weekCount;
+  return summarizePay({
+    wage: num(wage), period: 'month', year, month, workplace, days, weeks, scheduledWeeklyHours,
+    extraHours: 0, deduction, fullAttendance: true, mode: 'log',
+  });
+}
+
+
+
+/* 근무일·주 목록 → 항목별 금액. 스케줄 계산기와 근무 기록(알바비 추적)이 같은 함수를 쓴다. */
+export function summarizePay({
+  wage, period, year, month, workplace = 'unknown', days, weeks, scheduledWeeklyHours,
+  extraHours: extraRaw, deduction, fullAttendance, mode = 'schedule',
+}) {
+  const premiumRate = 0.5;
   const workMin = sumMin(days, 'paidMin');
   const nightMin = sumMin(days, 'nightMin');
   const dailyOverMin = days.reduce((s, x) => s + Math.max(0, x.paidMin - 480), 0);
@@ -128,23 +209,17 @@ export function calculatePay(input) {
     const wDailyOver = wk.days.reduce((s, x) => s + Math.max(0, x.paidMin - 480), 0);
     const over40 = Math.max(0, wMin - 2400 - wDailyOver);
     weeklyOverMin += over40;
-    const eligible = wMin >= 900 && input.fullAttendance !== false;
+    const eligible = wMin >= 900 && fullAttendance !== false;
     const jMin = eligible ? Math.min(wMin, 2400) / 2400 * 480 : 0;
     if (eligible) { juhyuWeeks += 1; juhyuMin += jMin; }
-    return { label: wk.label, hours: wMin / 60, eligible, juhyuHours: jMin / 60 };
+    return { label: wk.label, start: wk.start, end: wk.end, hours: wMin / 60, eligible, juhyuHours: jMin / 60, juhyuPay: round(wage * jMin / 60) };
   });
 
-  const extraHours = Math.max(0, num(input.extraHours));
+  const extraHours = Math.max(0, num(extraRaw));
   const workHours = workMin / 60;
   const nightHours = nightMin / 60;
   const overHours = (dailyOverMin + weeklyOverMin) / 60 + extraHours;
   const juhyuHours = juhyuMin / 60;
-
-  const scheduledWeeklyHours = (() => {
-    let m = 0;
-    for (let w = 0; w < 7; w += 1) if (input.days[w]) m += analyzeShift(daySchedule(input, w)).paidMin;
-    return m / 60;
-  })();
 
   const minWage = minWageFor(year);
   const premiumApplies = workplace === 'over5';
@@ -165,7 +240,9 @@ export function calculatePay(input) {
     });
   }
 
-  const juhyuWhy = input.fullAttendance === false
+  const juhyuWhy = mode === 'log'
+    ? `기록한 근무를 월~일 한 주 단위로 묶어, 주 15시간 이상인 주마다 하루치 임금(주 근무시간 ÷ 40 × 8시간, 최대 8시간)을 예상했어요. ${weeks.length}주 중 ${juhyuWeeks}주가 해당돼요. 실제 주휴수당은 근로계약상 소정근로시간과 개근 여부로 판단하니, 결근한 주가 있었다면 달라질 수 있어요.`
+    : fullAttendance === false
     ? '결근이 있다고 선택해서 주휴수당을 0원으로 계산했어요. 주휴수당은 그 주 소정근로일을 개근해야 발생해요.'
     : scheduledWeeklyHours < 15
       ? `한 주 근무시간이 ${h(scheduledWeeklyHours)}시간으로 15시간 미만이에요. 4주 평균 주 15시간 미만인 초단시간 근로자는 주휴수당 대상이 아니에요.`
@@ -204,7 +281,7 @@ export function calculatePay(input) {
 
   const gross = items.filter((i) => i.included).reduce((s, i) => s + i.amount, 0);
   const conditionalExtra = items.filter((i) => i.conditional).reduce((s, i) => s + i.amount, 0);
-  const deductions = calcDeductions(gross, input.deduction);
+  const deductions = calcDeductions(gross, deduction);
   const deductTotal = deductions.reduce((s, d) => s + d.amount, 0);
 
   const warnings = [];
@@ -217,15 +294,15 @@ export function calculatePay(input) {
   const breakIssues = new Set();
   days.forEach((d) => {
     const need = legalBreakMin(d.paidMin);
-    if (d.valid && d.breakMin < need) breakIssues.add(WEEKDAYS[d.w]);
+    if (d.valid && d.breakMin < need) breakIssues.add(d.date && mode === 'log' ? d.label : `${WEEKDAYS[d.w]}요일`);
   });
   if (breakIssues.size) {
     warnings.push({
       level: 'info',
-      text: `${[...breakIssues].join('·')}요일 휴게시간이 법정 기준(4시간 근무 시 30분, 8시간 근무 시 1시간 이상)보다 짧게 입력됐어요. 실제로 쉬었는지 확인해보세요.`,
+      text: `${[...breakIssues].join('·')} 휴게시간이 법정 기준(4시간 근무 시 30분, 8시간 근무 시 1시간 이상)보다 짧게 입력됐어요. 실제로 쉬었는지 확인해보세요.`,
     });
   }
-  if (days.length === 0) warnings.push({ level: 'info', text: '근무하는 요일을 하나 이상 선택해주세요.' });
+  if (days.length === 0 && mode === 'schedule') warnings.push({ level: 'info', text: '근무하는 요일을 하나 이상 선택해주세요.' });
 
   return {
     wage, period, year, month, minWage, workplace,

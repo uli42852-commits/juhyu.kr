@@ -1,5 +1,6 @@
 import React from 'react';
 import PayCalculator from '../components/PayCalculator.jsx';
+import HomeTrackCard from '../components/tracker/HomeTrackCard.jsx';
 import { Faq, Related, Section, Prose } from '../components/Sections.jsx';
 import { CURRENT_YEAR, CURRENT_MIN_WAGE } from '../lib/legal.js';
 import { fmt } from '../lib/pay.js';
@@ -42,19 +43,29 @@ export default function Home() {
       <div className="wrap">
         <section className="hero">
           <h1>알바비, <span className="hl">제대로</span><br />받고 있나요?</h1>
-          <p className="lead">근무시간과 급여를 입력하면<br />내가 받아야 할 금액을 한눈에 확인해보세요.</p>
-          <div className="hero-ctas">
-            <a className="btn btn-primary" href="#calc">내 알바비 계산하기</a>
+          <p className="lead">근무시간을 기록하고<br />받아야 할 돈과 실제 받은 돈을 비교해보세요.</p>
+          <div className="hero-ctas split">
+            <a className="btn btn-primary btn-wide" href="/tracker/#/start">내 알바비 추적 시작하기</a>
+            <a className="btn btn-ghost" href="#calc">내 알바비 계산하기</a>
             <a className="btn btn-ghost" href="/paycheck/">급여명세서 확인하기</a>
           </div>
           <div className="hero-meta">
             <span>{CURRENT_YEAR} 최저임금 {fmt(CURRENT_MIN_WAGE)}원 반영</span>
             <span>주휴·야간·공제까지</span>
-            <span>로그인 없이, 브라우저에서만 계산</span>
+            <span>로그인 없이, 브라우저에서만 저장</span>
           </div>
         </section>
 
-        <PayCalculator variant="full" />
+        <HomeTrackCard />
+
+        <div className="tile-grid" style={{ marginTop: 12, marginBottom: 32 }}>
+          <a className="tile" href="/tracker/#/start"><span className="ic">🗓</span><span className="t">근무 기록</span><span className="d">출퇴근만 5초 기록</span></a>
+          <a className="tile" href="/paycheck-check/"><span className="ic">🔍</span><span className="t">급여 검증</span><span className="d">받은 돈과 예상 비교</span></a>
+          <a className="tile" href="/paycheck/"><span className="ic">🧾</span><span className="t">급여명세서</span><span className="d">항목별로 확인</span></a>
+          <a className="tile" href="/tracker/#/report"><span className="ic">📊</span><span className="t">알바비 리포트</span><span className="d">한 달을 한 장으로</span></a>
+        </div>
+
+        <PayCalculator variant="full" sticky={false} />
 
         <Related title="상황별로 바로 확인하기" keys={['paycheckCheck', 'paycheck', 'monthly', 'weekly', 'night', 'minimumWage']} />
 

@@ -35,7 +35,7 @@ function StickySummary({ targetId, label, value }) {
  *  - 'monthly' : 이번 달 예상 알바비 (달력 포함)
  *  - 'verify'  : 받은 금액 검증을 앞에 둔 형태
  */
-export default function PayCalculator({ variant = 'full', showChecklist = true }) {
+export default function PayCalculator({ variant = 'full', showChecklist = true, sticky = true }) {
   const { input, update, result, verify, reset } = usePayInput();
   const monthly = variant === 'monthly';
   const verifyFirst = variant === 'verify';
@@ -106,7 +106,7 @@ export default function PayCalculator({ variant = 'full', showChecklist = true }
         )}
       </div>
 
-      <StickySummary targetId={resultId} label={monthly ? `${input.month}월 예상 알바비` : '예상 알바비 (세전)'} value={result.gross} />
+      {sticky && <StickySummary targetId={resultId} label={monthly ? `${input.month}월 예상 알바비` : '예상 알바비 (세전)'} value={result.gross} />}
     </div>
   );
 }

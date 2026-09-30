@@ -196,7 +196,7 @@ export default function PaycheckPage() {
       </Section>
 
       <Faq items={faq} />
-      <Related keys={['paycheckCheck', 'calculator', 'albaPay', 'guide']} />
+      <Related keys={['tracker', 'paycheckCheck', 'calculator', 'albaPay']} />
     </div>
   );
 }

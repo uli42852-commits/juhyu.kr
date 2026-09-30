@@ -100,7 +100,7 @@ export default function CalculatorPage() {
       </Section>
 
       <Faq items={faq} />
-      <Related keys={['paycheckCheck', 'paycheck', 'monthly', 'night']} />
+      <Related keys={['tracker', 'paycheckCheck', 'paycheck', 'monthly']} />
     </div>
   );
 }
