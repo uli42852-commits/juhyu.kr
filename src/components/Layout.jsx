@@ -36,8 +36,8 @@ export function Footer() {
             <ul>{col(['tracker', 'paycheckCheck', 'paycheck', 'albaPay', 'minimumWage'])}</ul>
           </div>
           <div>
-            <h3>더 알아보기</h3>
-            <ul>{col(['guide', 'severance'])}</ul>
+            <h3>모으기·투자</h3>
+            <ul>{col(['money', 'invest', 'guide', 'severance'])}</ul>
           </div>
           <div>
             <h3>JUHYU</h3>

@@ -5,6 +5,7 @@ import { SITE } from '../site.js';
 
 const STORED = [
   ['juhyu-tracker-v1 · juhyu-photo-*', '알바비 추적의 알바 정보·근무 기록·입금 기록·명세서, 근무 기록에 첨부한 사진'],
+  ['juhyu-money-v1', '투자 종목·매수·배당·저축 기록, 월별 자산 기록, 환율 설정'],
   ['juhyu-pay-v2', '급여 계산기·급여 검증·이번 달 알바비 입력값'],
   ['juhyu-payslip-v1', '급여명세서 확인에 입력한 금액'],
   ['juhyu-checklist-v1', '급여 확인 체크리스트 체크 상태'],

@@ -109,6 +109,8 @@ export default function Dashboard({ state, wp, ym, setYm, go }) {
           <button type="button" className="tile" onClick={() => go(`/payslip/${ym}`)}><span className="ic">🔍</span><span className="t">급여명세서 비교</span><span className="d">항목별 일치·확인 필요</span></button>
           <button type="button" className="tile" onClick={() => go(`/message/${s.status === 'waiting' && showPrev ? prevYm : ym}`)}><span className="ic">💬</span><span className="t">급여 확인 메시지</span><span className="d">사장님께 정중하게 묻기</span></button>
           <button type="button" className="tile" onClick={() => go('/settle')}><span className="ic">📦</span><span className="t">퇴사 전 최종 정산</span><span className="d">전체 기록을 한 번에</span></button>
+          <a className="tile" href="/money/#/save"><span className="ic">🐷</span><span className="t">받은 돈 모으기</span><span className="d">저축·투자로 옮긴 금액 기록</span></a>
+          <a className="tile" href="/invest/#/buy"><span className="ic">📈</span><span className="t">투자 기록</span><span className="d">알바비로 산 종목 기록</span></a>
           <button type="button" className="tile" onClick={() => go('/settings')}><span className="ic">⚙</span><span className="t">알바 정보·백업</span><span className="d">시급·조건 수정, 파일 백업</span></button>
         </div>
         <p className="fineprint">예상 금액은 입력하신 정보 기준으로 계산한 값이에요. 정확한 판단은 급여명세서와 근로계약 내용을 함께 확인하세요. 상담: {HELP_LINE}</p>

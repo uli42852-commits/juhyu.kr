@@ -1,6 +1,8 @@
 import React from 'react';
 import PayCalculator from '../components/PayCalculator.jsx';
 import HomeTrackCard from '../components/tracker/HomeTrackCard.jsx';
+import HomeMoney from '../components/money/HomeMoney.jsx';
+import { BottomNav } from '../components/Hub.jsx';
 import { Faq, Related, Section, Prose } from '../components/Sections.jsx';
 import { CURRENT_YEAR, CURRENT_MIN_WAGE } from '../lib/legal.js';
 import { fmt } from '../lib/pay.js';
@@ -42,18 +44,26 @@ export default function Home() {
     <>
       <div className="wrap">
         <section className="hero">
-          <h1>알바비, <span className="hl">제대로</span><br />받고 있나요?</h1>
-          <p className="lead">근무시간을 기록하고<br />받아야 할 돈과 실제 받은 돈을 비교해보세요.</p>
+          <div className="eyebrow">JUHYU · 알바부터 투자까지</div>
+          <h1>내가 번 돈,<br /><span className="hl">지금 어디에</span> 있을까?</h1>
+          <p className="lead">알바비부터 주식, 배당까지<br />내 돈의 흐름을 한눈에 관리해보세요.</p>
           <div className="hero-ctas split">
-            <a className="btn btn-primary btn-wide" href="/tracker/#/start">내 알바비 추적 시작하기</a>
-            <a className="btn btn-ghost" href="#calc">내 알바비 계산하기</a>
+            <a className="btn btn-primary btn-wide" href="/tracker/#/start">내 돈 관리 시작하기</a>
+            <a className="btn btn-ghost" href="#calc">알바비 계산하기</a>
             <a className="btn btn-ghost" href="/paycheck/">급여명세서 확인하기</a>
           </div>
           <div className="hero-meta">
-            <span>{CURRENT_YEAR} 최저임금 {fmt(CURRENT_MIN_WAGE)}원 반영</span>
-            <span>주휴·야간·공제까지</span>
             <span>로그인 없이, 브라우저에서만 저장</span>
+            <span>{CURRENT_YEAR} 최저임금 {fmt(CURRENT_MIN_WAGE)}원 반영</span>
+            <span>종목 추천·투자 권유 없음</span>
           </div>
+        </section>
+
+        <HomeMoney />
+
+        <section className="section">
+          <h2 style={{ fontSize: 24 }}>알바비, <span className="hl" style={{ background: 'linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%)' }}>제대로</span> 받고 있나요?</h2>
+          <p className="section-lead" style={{ marginTop: 8 }}>근무시간을 기록하고 받아야 할 돈과 실제 받은 돈을 비교해보세요.</p>
         </section>
 
         <HomeTrackCard />
@@ -80,7 +90,8 @@ export default function Home() {
         </Section>
 
         <Faq items={faq} />
-        <Related keys={['albaPay', 'guide', 'hourly', 'severance']} title="더 알아보기" />
+        <Related keys={['money', 'invest', 'albaPay', 'guide']} title="더 알아보기" />
+        <BottomNav current="home" />
       </div>
     </>
   );
