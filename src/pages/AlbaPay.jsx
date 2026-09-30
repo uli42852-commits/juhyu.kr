@@ -20,7 +20,7 @@ export const faq = [
 ];
 
 const STEPS = [
-  { t: '근무시간 맞춰보기', d: '날짜별 출근·퇴근·휴게시간을 정리하고 명세서의 총 근무시간과 비교해요.', href: '/monthly-alba-pay/', cta: '이번 달 근무시간 계산' },
+  { t: '근무시간 기록하기', d: '일한 날마다 출근·퇴근·휴게시간을 남겨두면 명세서의 총 근무시간과 바로 비교할 수 있어요.', href: '/tracker/#/start', cta: '알바비 추적으로 기록' },
   { t: '받아야 할 금액 계산', d: '기본급, 주휴수당, 해당되면 야간·연장 가산까지 더해 세전 금액을 구해요.', href: '/calculator/', cta: '급여 계산기' },
   { t: '공제 확인', d: '3.3%인지 4대보험인지, 그 외 빠진 금액이 있는지 확인해요.', href: '/paycheck/', cta: '명세서 공제 확인' },
   { t: '입금액과 비교', d: '통장에 들어온 금액과 예상 실수령액을 비교해요.', href: '/paycheck-check/', cta: '급여 검증' },
@@ -66,7 +66,7 @@ export default function AlbaPayPage() {
       </Section>
 
       <Faq items={faq} />
-      <Related keys={['paycheckCheck', 'paycheck', 'calculator', 'guide']} />
+      <Related keys={['tracker', 'paycheckCheck', 'paycheck', 'calculator']} />
     </div>
   );
 }

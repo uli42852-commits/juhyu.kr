@@ -33,7 +33,7 @@ export function Footer() {
           </div>
           <div>
             <h3>확인하기</h3>
-            <ul>{col(['paycheckCheck', 'paycheck', 'albaPay', 'minimumWage'])}</ul>
+            <ul>{col(['tracker', 'paycheckCheck', 'paycheck', 'albaPay', 'minimumWage'])}</ul>
           </div>
           <div>
             <h3>더 알아보기</h3>

@@ -4,6 +4,7 @@ import Layout from './components/Layout.jsx';
 /* 페이지는 필요한 것만 내려받도록 경로별로 코드 분할한다. */
 export const ROUTES = {
   home: { load: () => import('./pages/Home.jsx'), tool: true },
+  tracker: { load: () => import('./pages/Tracker.jsx'), tool: true },
   calculator: { load: () => import('./pages/Calculator.jsx'), tool: true },
   paycheckCheck: { load: () => import('./pages/PaycheckCheck.jsx'), tool: true },
   paycheck: { load: () => import('./pages/Paycheck.jsx'), tool: true },
